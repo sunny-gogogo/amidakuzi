@@ -1,0 +1,21 @@
+* { box-sizing: border-box; }
+body { margin: 0; font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Hiragino Kaku Gothic ProN", Meiryo, sans-serif; color: #222; }
+header, footer { padding: 12px 16px; background: #f6f6f7; border-bottom: 1px solid #e7e7ea; }
+h1 { margin: 0; font-size: 20px; }
+main { padding: 16px; max-width: 980px; margin: 0 auto; }
+
+.controls { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; align-items: end; margin-bottom: 16px; }
+.field { display: flex; flex-direction: column; gap: 6px; }
+label { font-size: 12px; color: #666; }
+input[type="number"], input[type="text"] { padding: 8px 10px; border: 1px solid #ccc; border-radius: 8px; }
+button { cursor: pointer; padding: 10px 14px; border: 1px solid #222; border-radius: 8px; background: white; }
+button:hover { background: #111; color: #fff; }
+
+.board { display: flex; justify-content: center; align-items: center; padding: 8px; background: #fafafa; border: 1px dashed #ddd; border-radius: 12px; }
+
+.label-row { display: grid; gap: 8px; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); margin: 10px 0; }
+.label-col { display: flex; flex-direction: column; gap: 6px; align-items: center; }
+.label-col input { width: 100%; padding: 6px 8px; border: 1px solid #ccc; border-radius: 8px; }
+.start-btn { margin-top: 4px; font-size: 12px; padding: 6px 8px; border-radius: 999px; }
+.badge { display:inline-block; padding: 2px 8px; border-radius: 999px; background:#eef; border:1px solid #ccd; font-size:12px; }
+footer { border-top: 1px solid #e7e7ea; text-align: center; }
