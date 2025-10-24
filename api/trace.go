@@ -6,11 +6,6 @@ import (
 	"sort"
 )
 
-type Rung struct {
-	Left int `json:"left"`
-	Y    int `json:"y"`
-}
-
 type TraceRequest struct {
 	N      int    `json:"n"`
 	Levels int    `json:"levels"`
