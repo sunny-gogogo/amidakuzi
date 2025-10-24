@@ -1,0 +1,2 @@
+# amidakuzi
+amidakuzi desu
