@@ -1,9 +1,5 @@
 {
-  "functions": {
-    "api/*.go": {
-      "runtime": "go1.x"
-    }
-  },
+  "$schema": "https://openapi.vercel.sh/vercel.json",
   "routes": [
     { "src": "/api/(.*)", "dest": "/api/$1" },
     { "src": "/(.*)", "dest": "/public/$1" }
