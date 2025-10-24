@@ -5,7 +5,7 @@ import (
     "net/http"
     "sort"
 
-    "github.com/sunny-gogogo/amidakuzi/lib/amida"
+    "github.com/sunny-gogogo/amidakuzi/lib/amidakuzi"
 )
 
 type TraceRequest struct {
