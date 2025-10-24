@@ -1,3 +1,3 @@
-module github.com/yourname/amida
+module github.com/sunny-gogogo/amidakuzi
 
-go 1.22
+go 1.20
