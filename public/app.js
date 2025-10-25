@@ -3,7 +3,50 @@ let ladder = null;        // { n, levels, rungs, top[], bottom[] }
 let canvas, ctx;
 let W, H, marginTop=60, marginBottom=60, marginX=80;
 
-// ...（座標系・描画系はそのまま）...
+// 列x座標（Canvas）
+function colX(i, n, W) {
+  const usableW = W - marginX*2;
+  if (n === 1) return marginX + usableW/2;
+  return marginX + i * (usableW / (n - 1));
+}
+// 段y座標（Canvas）
+function levelY(y, levels, H) {
+  const usableH = H - (marginTop + marginBottom);
+  return marginTop + y * (usableH / levels);
+}
+
+function clearCanvas() {
+  ctx.clearRect(0, 0, W, H);
+}
+
+function drawBase() {
+  if (!ladder) return;
+  const { n, levels, rungs } = ladder;
+
+  // 背景
+  ctx.fillStyle = "#fff";
+  ctx.fillRect(0, 0, W, H);
+
+  // 縦線
+  ctx.lineWidth = 2;
+  ctx.strokeStyle = "#333";
+  for (let i = 0; i < n; i++) {
+    ctx.beginPath();
+    ctx.moveTo(colX(i,n,W), levelY(0,levels,H));
+    ctx.lineTo(colX(i,n,W), levelY(levels,levels,H));
+    ctx.stroke();
+  }
+
+  // 横線
+  ctx.strokeStyle = "#888";
+  for (const r of rungs) {
+    const y = levelY(r.y, levels, H);
+    ctx.beginPath();
+    ctx.moveTo(colX(r.left, n, W), y);
+    ctx.lineTo(colX(r.left+1, n, W), y);
+    ctx.stroke();
+  }
+}
 
 function makeBottomInputs(n, values = []) {
   const wrap = document.getElementById("bottom-editor");
@@ -99,6 +142,7 @@ async function onGenerate() {
   ctx = canvas.getContext("2d");
   W = canvas.width;
   H = canvas.height;
+  console.log("ctx?", ctx); // ← nullなら描けない
 
   makeTopInputs(ladder.n);
   renderBottom(ladder.n, ladder.bottom);
