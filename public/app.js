@@ -113,7 +113,7 @@ function renderTopOverlay(n) {
     node.style.left = `${colX(i, n, W)}px`;
 
     const input = document.createElement("input");
-    input.placeholder = "上の項目（任意）";
+    input.placeholder = "なまえ";
     input.value = ladder?.top?.[i] || "";
     input.addEventListener("input", () => {
       ladder.top[i] = input.value;
