@@ -95,7 +95,7 @@ function makeTopInputs(n) {
     col.className = "label-col";
 
     const input = document.createElement("input");
-    input.placeholder = "上の項目（任意）";
+    input.placeholder = "なまえ（任意）";
     input.value = ladder?.top?.[i] || "";
     input.addEventListener("input", () => {
       ladder.top[i] = input.value;
