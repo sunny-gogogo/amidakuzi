@@ -88,7 +88,7 @@ button:hover { background: #111; color: #fff; }
   pointer-events: auto; /* 入力やクリックを有効化 */
 }
 .top-node input {
-  width: 100px;
+  width: 90px;
   padding: 6px 8px;
   border: 1px solid #ccc;
   border-radius: 8px;
