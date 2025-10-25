@@ -1,7 +1,9 @@
 // ====== 状態 ======
 let ladder = null;        // { n, levels, rungs, top[], bottom[] }
 let canvas, ctx;
-let W, H, marginTop = 60, marginBottom = 60, marginX = 80;
+let W, H;
+const marginTop = 60, marginBottom = 60, marginX = 80;
+const COL_SPACING = 80; // 縦線間の最低ピクセル間隔（多いときは横スクロール）
 
 // 列x座標（Canvas）
 function colX(i, n, W) {
@@ -16,18 +18,35 @@ function levelY(y, levels, H) {
   return marginTop + y * (usableH / levels);
 }
 
-// Canvasクリア
+// Canvas サイズを縦線本数に応じて決定（横スクロール許容）
+function computeCanvasWidth(n) {
+  const minW = 900; // 最低幅
+  const needed = marginX * 2 + (n - 1) * COL_SPACING;
+  return Math.max(minW, needed);
+}
+
+function initCanvas(n) {
+  canvas = document.getElementById("canvas");
+  ctx = canvas.getContext("2d");
+
+  // 幅は列数から算出、高さは固定（必要なら調整可）
+  W = computeCanvasWidth(n);
+  H = canvas.height; // index.html で 560 固定
+
+  canvas.width = W;
+
+  // board-wrap の幅も Canvas に合わせる（overlay と一体化）
+  const wrap = document.getElementById("board-wrap");
+  wrap.style.width = `${W}px`;
+}
+
 function clearCanvas() {
   ctx.clearRect(0, 0, W, H);
 }
 
 // ベース線（縦線・横線）描画（状態を漏らさない）
 function drawBase() {
-  if (!ladder) {
-    console.warn("drawBase: ladder is null");
-    return;
-  }
-
+  if (!ladder) return;
   const { n, levels, rungs } = ladder;
 
   ctx.save();
@@ -59,7 +78,7 @@ function drawBase() {
   ctx.restore();
 }
 
-// 下の入力欄（ボトム）生成
+// 下の入力欄（ボトム）生成（コントロール部）
 function makeBottomInputs(n, values = []) {
   const wrap = document.getElementById("bottom-editor");
   wrap.innerHTML = "";
@@ -84,18 +103,17 @@ function collectBottomInputs() {
   return vals;
 }
 
-// 上側の入力＋スタートボタン群（番号ラベルは出さない）
-function makeTopInputs(n) {
-  const row = document.getElementById("top-labels");
-  row.innerHTML = "";
-  row.style.gridTemplateColumns = `repeat(${n}, minmax(80px, 1fr))`;
-
+// ★ Overlay を Canvas 座標に同期配置（ズレを根絶）
+function renderTopOverlay(n) {
+  const top = document.getElementById("top-overlay");
+  top.innerHTML = "";
   for (let i = 0; i < n; i++) {
-    const col = document.createElement("div");
-    col.className = "label-col";
+    const node = document.createElement("div");
+    node.className = "top-node";
+    node.style.left = `${colX(i, n, W)}px`;
 
     const input = document.createElement("input");
-    input.placeholder = "なまえ（任意）";
+    input.placeholder = "上の項目（任意）";
     input.value = ladder?.top?.[i] || "";
     input.addEventListener("input", () => {
       ladder.top[i] = input.value;
@@ -106,25 +124,26 @@ function makeTopInputs(n) {
     btn.className = "start-btn";
     btn.addEventListener("click", () => startTrace(i));
 
-    col.appendChild(input);
-    col.appendChild(btn);
-    row.appendChild(col);
+    node.appendChild(input);
+    node.appendChild(btn);
+    top.appendChild(node);
   }
 }
 
-// 下側の結果表示（固定ラベル）
-function renderBottom(n, labels) {
-  const row = document.getElementById("bottom-labels");
-  row.innerHTML = "";
-  row.style.gridTemplateColumns = `repeat(${n}, minmax(80px, 1fr))`;
+function renderBottomOverlay(n, labels) {
+  const bottom = document.getElementById("bottom-overlay");
+  bottom.innerHTML = "";
   for (let i = 0; i < n; i++) {
-    const col = document.createElement("div");
-    col.className = "label-col";
-    const label = document.createElement("span");
-    label.className = "badge";
-    label.textContent = labels[i] ?? "";
-    col.appendChild(label);
-    row.appendChild(col);
+    const node = document.createElement("div");
+    node.className = "bottom-node";
+    node.style.left = `${colX(i, n, W)}px`;
+
+    const badge = document.createElement("span");
+    badge.className = "badge";
+    badge.textContent = labels[i] ?? "";
+
+    node.appendChild(badge);
+    bottom.appendChild(node);
   }
 }
 
@@ -202,18 +221,14 @@ async function startTrace(startIdx) {
 
 // 生成ボタン処理
 async function onGenerate() {
-  canvas = document.getElementById("canvas");
-  ctx = canvas.getContext("2d");
-  W = canvas.width;
-  H = canvas.height;
-
   const n = Math.max(2, Math.min(50, Number(document.getElementById("n").value || 5)));
+  initCanvas(n);
+
   const bottomVals = collectBottomInputs();
 
-  // ★ rungDensity を送らず、バックエンドの自動調整に任せる
   const payload = {
     n,
-    levels: 0,          // 未指定扱い（バックエンドが n*3 に補完）
+    levels: 0,          // バックエンドが n*3 に補完
     bottom: bottomVals,
     defaultAtari: false
   };
@@ -233,11 +248,14 @@ async function onGenerate() {
   const data = await res.json();
   ladder = data.ladder;
 
-  makeTopInputs(ladder.n);
-  renderBottom(ladder.n, ladder.bottom);
+  // Overlay を Canvas の列位置に同期
+  renderTopOverlay(ladder.n);
+  renderBottomOverlay(ladder.n, ladder.bottom);
+
   clearCanvas();
   drawBase();
 
+  // 念のため1フレーム後に再描画（リサイズ直後の安全策）
   requestAnimationFrame(() => {
     clearCanvas();
     drawBase();
@@ -246,19 +264,21 @@ async function onGenerate() {
 
 // 初期化
 window.addEventListener("DOMContentLoaded", () => {
-  canvas = document.getElementById("canvas");
-  ctx = canvas.getContext("2d");
-  W = canvas.width;
-  H = canvas.height;
+  // 初期 Canvas セットアップ（n 初期値に合わせる）
+  const n0 = Number(document.getElementById("n").value || 5);
+  initCanvas(n0);
 
   const nInput = document.getElementById("n");
   nInput.addEventListener("input", () => {
     const prev = collectBottomInputs();
     const n = Math.max(2, Math.min(50, Number(nInput.value || 5)));
     makeBottomInputs(n, prev);
+    // 入力変更時点では描画は行わず、生成時にまとめてリサイズ
   });
 
-  makeBottomInputs(Number(nInput.value || 5));
+  // 下入力欄の初期生成
+  makeBottomInputs(n0);
+
   document.getElementById("btn-generate").addEventListener("click", onGenerate);
-  onGenerate();
+  onGenerate(); // 初期生成
 });
