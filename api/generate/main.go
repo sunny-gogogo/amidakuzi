@@ -31,11 +31,13 @@ type GenerateResponse struct {
 	Ladder Ladder `json:"ladder"`
 }
 
-// バランス調整用
-const targetRungsPerPair = 3.0 // 各ペアの目標本数
-const minAutoDensity = 0.05
-const maxAutoDensity = 0.60
-const minRungsPerPair = 2 // 各ペアの最低本数保証
+// 目標バランスと制約
+const (
+	targetRungsPerPair = 4.0 // 各ペアの目標本数（だいたい 3〜5 の中間）
+	minAutoDensity     = 0.05
+	maxAutoDensity     = 0.60
+	minRungsPerPair    = 2   // ★ 各ペアの最低本数保証
+)
 
 func validateGenerate(req *GenerateRequest) error {
 	if req.N < 2 || req.N > 50 {
@@ -44,8 +46,9 @@ func validateGenerate(req *GenerateRequest) error {
 	if req.Levels <= 0 {
 		req.Levels = req.N * 3
 	}
-	// 自動密度調整
+	// 自動密度調整（rungDensity 未指定・0以下なら補完）
 	if req.RungDensity <= 0 {
+		// 1ペアあたりの期待本数 ≈ levels * p → p ≈ target / levels
 		p := targetRungsPerPair / float64(req.Levels)
 		if p < minAutoDensity {
 			p = minAutoDensity
@@ -55,13 +58,13 @@ func validateGenerate(req *GenerateRequest) error {
 		}
 		req.RungDensity = p
 	}
+	// 念のための上限
 	if req.RungDensity > 0.95 {
 		req.RungDensity = 0.95
 	}
 	return nil
 }
 
-// デフォルトの「あたり」「はずれ」
 func generateDefaultBottom(n int) []string {
 	out := make([]string, n)
 	if n > 0 {
@@ -73,8 +76,41 @@ func generateDefaultBottom(n int) []string {
 	return out
 }
 
+// 補助: 既存横線をインデックス化（y -> set(left)）
+func indexRungs(rungs []amida.Rung) map[int]map[int]bool {
+	m := make(map[int]map[int]bool, len(rungs))
+	for _, rg := range rungs {
+		if _, ok := m[rg.Y]; !ok {
+			m[rg.Y] = make(map[int]bool)
+		}
+		m[rg.Y][rg.Left] = true
+	}
+	return m
+}
+
+// 同一段での隣接禁止 + 重複禁止を満たして置けるか
+func canPlace(left, y, n int, idx map[int]map[int]bool) bool {
+	row := idx[y]
+	if row == nil {
+		return true // その段にまだ何もなければOK
+	}
+	// 同じペア同じ段はNG
+	if row[left] {
+		return false
+	}
+	// 同一段での隣接禁止（左右のペア）
+	if left-1 >= 0 && row[left-1] {
+		return false
+	}
+	if left+1 <= n-2 && row[left+1] {
+		return false
+	}
+	return true
+}
+
 // 横線を構築する
 func buildRungs(n, levels int, p float64, r *rand.Rand) []amida.Rung {
+	// まず確率的に生成（同一段の隣接禁止は既存ロジックで担保）
 	rungs := make([]amida.Rung, 0, int(float64(levels)*p))
 	for y := 0; y < levels; y++ {
 		skipped := false
@@ -90,37 +126,60 @@ func buildRungs(n, levels int, p float64, r *rand.Rand) []amida.Rung {
 		}
 	}
 
-	// ★ 各ペアに最低2本保証
+	// 既存をインデックス化
+	idx := indexRungs(rungs)
+
+	// 各ペアの本数をカウント
 	pairCount := make([]int, n-1)
-	for _, rung := range rungs {
-		pairCount[rung.Left]++
+	for _, rg := range rungs {
+		pairCount[rg.Left]++
 	}
 
+	// ★ 各ペアに最低2本を保証（同一段の隣接禁止を厳守）
 	for left := 0; left < n-1; left++ {
-		if pairCount[left] < minRungsPerPair {
-			need := minRungsPerPair - pairCount[left]
-			for i := 0; i < need; i++ {
+		if pairCount[left] >= minRungsPerPair {
+			continue
+		}
+		need := minRungsPerPair - pairCount[left]
+
+		for i := 0; i < need; i++ {
+			// まずランダム試行
+			placed := false
+			for tries := 0; tries < 2*levels; tries++ {
 				y := r.Intn(levels)
-				// すでに同じYにあるならやり直す
-				for hasRungAt(rungs, left, y) {
-					y = r.Intn(levels)
+				if canPlace(left, y, n, idx) {
+					rungs = append(rungs, amida.Rung{Left: left, Y: y})
+					if idx[y] == nil {
+						idx[y] = make(map[int]bool)
+					}
+					idx[y][left] = true
+					pairCount[left]++
+					placed = true
+					break
 				}
-				rungs = append(rungs, amida.Rung{Left: left, Y: y})
 			}
+			// ランダムで見つからなければ、全段走査で必ず探す
+			if !placed {
+				for y := 0; y < levels; y++ {
+					if canPlace(left, y, n, idx) {
+						rungs = append(rungs, amida.Rung{Left: left, Y: y})
+						if idx[y] == nil {
+							idx[y] = make(map[int]bool)
+						}
+						idx[y][left] = true
+						pairCount[left]++
+						placed = true
+						break
+					}
+				}
+			}
+			// ここまでで placed==false のケースは、levels が極端に小さく
+			// かつ全段が左右どちらかに埋まっている場合だけですが、
+			// 本アプリの levels デフォルト (n*3) ならまず発生しません。
 		}
 	}
 
 	return rungs
-}
-
-// 同じ位置に横線があるか確認
-func hasRungAt(rungs []amida.Rung, left, y int) bool {
-	for _, rung := range rungs {
-		if rung.Left == left && rung.Y == y {
-			return true
-		}
-	}
-	return false
 }
 
 func shuffle[T any](s []T, r *rand.Rand) {
@@ -130,7 +189,7 @@ func shuffle[T any](s []T, r *rand.Rand) {
 	}
 }
 
-// エントリーポイント
+// ★ Vercel が呼ぶエクスポート関数
 func Handler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		w.Header().Set("Allow", "POST")
