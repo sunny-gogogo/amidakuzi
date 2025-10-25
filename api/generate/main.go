@@ -33,7 +33,7 @@ type GenerateResponse struct {
 
 // バランス・制約
 const (
-	targetRungsPerPair = 4.0 // 各ペアの目標本数（体感 3〜5 の中間）
+	targetRungsPerPair = 3.0 // 各ペアの目標本数（体感 3〜5 の中間）
 	minAutoDensity     = 0.05
 	maxAutoDensity     = 0.60
 	minRungsPerPair    = 2   // 各ペアの最低本数保証
@@ -257,6 +257,6 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 		},
 	}
 
-	w.Header().Set("Content-Type": "application/json; charset=utf-8")
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	_ = json.NewEncoder(w).Encode(res)
 }
