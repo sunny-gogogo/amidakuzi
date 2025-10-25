@@ -26,18 +26,92 @@ button:hover { background: #111; color: #fff; }
   background: #fafafa;
 }
 .bottom-scroll input {
-  flex: 0 0 auto;          /* 折り返さず並べる */
-  min-width: 140px;        /* 1つの入力の幅 */
+  flex: 0 0 auto;
+  min-width: 140px;
   padding: 6px 8px;
   border: 1px solid #ccc;
   border-radius: 8px;
 }
 
-.board { display: flex; justify-content: center; align-items: center; padding: 8px; background: #fafafa; border: 1px dashed #ddd; border-radius: 12px; }
+/* Board: Canvas + Overlays */
+.board { padding: 8px; background: #fafafa; border: 1px dashed #ddd; border-radius: 12px; }
 
-.label-row { display: grid; gap: 8px; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); margin: 10px 0; }
-.label-col { display: flex; flex-direction: column; gap: 6px; align-items: center; }
-.label-col input { width: 100%; padding: 6px 8px; border: 1px solid #ccc; border-radius: 8px; }
-.start-btn { margin-top: 4px; font-size: 12px; padding: 6px 8px; border-radius: 999px; }
-.badge { display:inline-block; padding: 2px 8px; border-radius: 999px; background:#eef; border:1px solid #ccd; font-size:12px; }
+/* 横スクロールはこの要素で一括管理（CanvasとOverlayが一体で動く） */
+#board-scroller {
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* 実際の描画領域（幅はJSで動的に設定） */
+#board-wrap {
+  position: relative;
+  margin: 0 auto;
+}
+
+/* Canvas は幅可変（JSで width を設定） */
+#canvas {
+  display: block;
+  background: #fff;
+  border-radius: 12px;
+}
+
+/* Overlays は board-wrap に絶対配置 */
+.overlay {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  pointer-events: none; /* 子要素で必要に応じて上書き */
+}
+
+/* 上オーバーレイの高さ（上余白相当） */
+#top-overlay {
+  top: 0;
+  height: 60px; /* marginTop と一致 */
+}
+
+/* 下オーバーレイの高さ（下余白相当） */
+#bottom-overlay {
+  bottom: 0;
+  height: 60px; /* marginBottom と一致 */
+}
+
+/* 上の入力＋スタートボタンの1セット */
+.top-node {
+  position: absolute;
+  top: 8px;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  pointer-events: auto; /* 入力やクリックを有効化 */
+}
+.top-node input {
+  width: 140px;
+  padding: 6px 8px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+}
+.top-node .start-btn {
+  font-size: 12px;
+  padding: 6px 8px;
+  border-radius: 999px;
+}
+
+/* 下のラベル */
+.bottom-node {
+  position: absolute;
+  bottom: 8px;
+  transform: translateX(-50%);
+  pointer-events: auto;
+}
+.badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #eef;
+  border: 1px solid #ccd;
+  font-size: 12px;
+}
 footer { border-top: 1px solid #e7e7ea; text-align: center; }
