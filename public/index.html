@@ -1,4 +1,4 @@
-<!doctype html>
+<!doctype html> 
 <html lang="ja">
 <head>
   <meta charset="utf-8" />
@@ -8,7 +8,7 @@
 </head>
 <body>
   <header>
-    <h1>あみだくじ</h1>
+    <h1>あみだくじ（Go + Vercel）</h1>
   </header>
 
   <main>
@@ -18,30 +18,33 @@
         <input id="n" type="number" min="2" max="50" value="5" />
       </div>
 
-      <!-- 下の項目エディタ（nの真下） -->
+      <!-- 下の項目エディタ（nの真下）：1行横スクロール -->
       <div class="field field-full">
-        <label>アイテム(あみだくじの終着点)</label>
+        <label>下の項目（各列に1つずつ）</label>
         <div id="bottom-editor" class="bottom-scroll" aria-label="下の項目入力行"></div>
       </div>
 
       <button id="btn-generate">生成</button>
     </section>
 
-    <section class="labels">
-      <div id="top-labels" class="label-row"></div>
-    </section>
-
+    <!-- ★ Canvas + Overlays を同じスクロール領域に -->
     <section class="board">
-      <canvas id="canvas" width="900" height="560"></canvas>
-    </section>
+      <div id="board-scroller">
+        <div id="board-wrap">
+          <canvas id="canvas" height="560"></canvas>
 
-    <section class="labels">
-      <div id="bottom-labels" class="label-row"></div>
+          <!-- 上側のオーバーレイ（入力＋スタートボタン） -->
+          <div id="top-overlay" class="overlay"></div>
+
+          <!-- 下側のオーバーレイ（結果ラベル） -->
+          <div id="bottom-overlay" class="overlay"></div>
+        </div>
+      </div>
     </section>
   </main>
 
   <footer>
-    <small>© おひさまチーム — Go言語であみだくじ —</small>
+    <small>© Group Activity — Go practice</small>
   </footer>
 
   <script src="app.js"></script>
