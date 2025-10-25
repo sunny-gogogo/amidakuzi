@@ -98,7 +98,7 @@ async function startTrace(startIdx) {
     rungs: ladder.rungs,
     start: startIdx
   };
-  const res = await fetch("/api/trace", {
+  const res = await fetch("/api/trace/main", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload)
@@ -174,7 +174,7 @@ async function onGenerate() {
     bottom: bottom,
     defaultAtari: !bottomRaw.length
   };
-  const res = await fetch("/api/generate", {
+  const res = await fetch("/api/generate/main", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload)
