@@ -84,7 +84,7 @@ function collectBottomInputs() {
   return vals;
 }
 
-// 上側の入力＋スタートボタン群
+// 上側の入力＋スタートボタン群（番号ラベルは出さない）
 function makeTopInputs(n) {
   const row = document.getElementById("top-labels");
   row.innerHTML = "";
@@ -94,13 +94,8 @@ function makeTopInputs(n) {
     const col = document.createElement("div");
     col.className = "label-col";
 
-    // ❌ 上1〜上Nのラベルを削除
-    // const label = document.createElement("span");
-    // label.className = "badge";
-    // label.textContent = `上 ${i + 1}`;
-
     const input = document.createElement("input");
-    input.placeholder = "なまえ(任意)";
+    input.placeholder = "上の項目（任意）";
     input.value = ladder?.top?.[i] || "";
     input.addEventListener("input", () => {
       ladder.top[i] = input.value;
@@ -111,7 +106,6 @@ function makeTopInputs(n) {
     btn.className = "start-btn";
     btn.addEventListener("click", () => startTrace(i));
 
-    // ラベルを入れないように変更
     col.appendChild(input);
     col.appendChild(btn);
     row.appendChild(col);
@@ -216,10 +210,10 @@ async function onGenerate() {
   const n = Math.max(2, Math.min(50, Number(document.getElementById("n").value || 5)));
   const bottomVals = collectBottomInputs();
 
+  // ★ rungDensity を送らず、バックエンドの自動調整に任せる
   const payload = {
     n,
-    levels: 0,
-    rungDensity: 0.55,
+    levels: 0,          // 未指定扱い（バックエンドが n*3 に補完）
     bottom: bottomVals,
     defaultAtari: false
   };
