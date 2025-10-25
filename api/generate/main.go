@@ -7,7 +7,7 @@ import (
     "net/http"
     "time"
 
-    "github.com/sunny-gogogo/amidakuzi/lib/amidakuzi"
+    "github.com/sunny-gogogo/amidakuzi/lib/amida"
 )
 
 type Ladder struct {
