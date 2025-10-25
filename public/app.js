@@ -3,7 +3,7 @@ let ladder = null;        // { n, levels, rungs, top[], bottom[] }
 let canvas, ctx;
 let W, H;
 const marginTop = 60, marginBottom = 60, marginX = 80;
-const COL_SPACING = 80; // 縦線間の最低ピクセル間隔（多いときは横スクロール）
+const COL_SPACING = 100; // 縦線間の最低ピクセル間隔（多いときは横スクロール）
 
 // 列x座標（Canvas）
 function colX(i, n, W) {
