@@ -69,12 +69,14 @@ function renderBottom(n, labels) {
 // 生成ボタン
 async function onGenerate() {
   const n = Math.max(2, Math.min(50, Number(document.getElementById("n").value || 5)));
-  const bottomVals = collectBottomInputs(); // ← 必ず n 個そろう
+  const bottomVals = collectBottomInputs(); // 下の入力値（またはデフォルト）
 
   const payload = {
     n,
+    levels: 0,             // ← 明示的に送る（未入力扱い）
+    rungDensity: 0.55,     // ← デフォルトの密度を常に送る
     bottom: bottomVals,
-    defaultAtari: false     // ← 常に明示の bottom を送るので false
+    defaultAtari: false
   };
 
   const res = await fetch("/api/generate/main", {
@@ -82,22 +84,26 @@ async function onGenerate() {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload)
   });
+
   if (!res.ok) {
-    const txt = await res.text().catch(()=> "");
+    const txt = await res.text().catch(() => "");
     alert(`Generate failed: ${res.status} ${txt}`);
     return;
   }
+
   const data = await res.json();
   ladder = data.ladder;
 
   // Canvas 再計算＆描画
   canvas = document.getElementById("canvas");
   ctx = canvas.getContext("2d");
-  W = canvas.width; H = canvas.height;
+  W = canvas.width;
+  H = canvas.height;
 
   makeTopInputs(ladder.n);
   renderBottom(ladder.n, ladder.bottom);
-  clearCanvas(); drawBase();
+  clearCanvas();
+  drawBase();
 }
 
 async function startTrace(startIdx) {
