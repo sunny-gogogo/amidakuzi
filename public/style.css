@@ -66,7 +66,7 @@ button:hover { background: #111; color: #fff; }
 
 /* 上オーバーレイの高さ（上余白相当） */
 #top-overlay {
-  top: 20;
+  top: 0;
   height: 60px; /* marginTop と一致 */
 }
 
