@@ -30,7 +30,7 @@ function drawBase() {
 
   const { n, levels, rungs } = ladder;
 
-  ctx.save(); // ← 状態退避（lineWidth, strokeStyle など）
+  ctx.save();
 
   // 背景
   ctx.fillStyle = "#fff";
@@ -56,7 +56,7 @@ function drawBase() {
     ctx.stroke();
   }
 
-  ctx.restore(); // ← 状態復帰（ここで灰色等の設定を外に残さない）
+  ctx.restore();
 }
 
 // 下の入力欄（ボトム）生成
@@ -89,16 +89,18 @@ function makeTopInputs(n) {
   const row = document.getElementById("top-labels");
   row.innerHTML = "";
   row.style.gridTemplateColumns = `repeat(${n}, minmax(80px, 1fr))`;
+
   for (let i = 0; i < n; i++) {
     const col = document.createElement("div");
     col.className = "label-col";
 
-    const label = document.createElement("span");
-    label.className = "badge";
-    label.textContent = `上 ${i + 1}`;
+    // ❌ 上1〜上Nのラベルを削除
+    // const label = document.createElement("span");
+    // label.className = "badge";
+    // label.textContent = `上 ${i + 1}`;
 
     const input = document.createElement("input");
-    input.placeholder = "上の項目（任意）";
+    input.placeholder = "なまえ(任意)";
     input.value = ladder?.top?.[i] || "";
     input.addEventListener("input", () => {
       ladder.top[i] = input.value;
@@ -109,7 +111,7 @@ function makeTopInputs(n) {
     btn.className = "start-btn";
     btn.addEventListener("click", () => startTrace(i));
 
-    col.appendChild(label);
+    // ラベルを入れないように変更
     col.appendChild(input);
     col.appendChild(btn);
     row.appendChild(col);
@@ -157,7 +159,6 @@ async function startTrace(startIdx) {
   const data = await res.json();
   const path = data.path;
 
-  // アニメーション描画
   clearCanvas();
   drawBase();
 
@@ -166,7 +167,6 @@ async function startTrace(startIdx) {
     y: levelY(p.y, ladder.levels, H)
   }));
 
-  // 赤スタイルの設定（毎フレーム drawBase の後に再適用するのが安全）
   const applyRedStyle = () => {
     ctx.lineWidth = 4;
     ctx.strokeStyle = "#e02";
@@ -187,8 +187,8 @@ async function startTrace(startIdx) {
     const ratio = Math.min(1, elapsed / segDur);
 
     clearCanvas();
-    drawBase();   // ← ここで strokeStyle が変わるので
-    applyRedStyle(); // ← 必ず赤に戻す
+    drawBase();
+    applyRedStyle();
 
     ctx.beginPath();
     ctx.moveTo(pts[0].x, pts[0].y);
@@ -218,8 +218,8 @@ async function onGenerate() {
 
   const payload = {
     n,
-    levels: 0,          // バックエンドが自動補完
-    rungDensity: 0.55,  // バックエンドが使う密度
+    levels: 0,
+    rungDensity: 0.55,
     bottom: bottomVals,
     defaultAtari: false
   };
@@ -244,7 +244,6 @@ async function onGenerate() {
   clearCanvas();
   drawBase();
 
-  // 念のため1フレーム後に再描画
   requestAnimationFrame(() => {
     clearCanvas();
     drawBase();
@@ -265,9 +264,7 @@ window.addEventListener("DOMContentLoaded", () => {
     makeBottomInputs(n, prev);
   });
 
-  // 初期入力欄生成
   makeBottomInputs(Number(nInput.value || 5));
-
   document.getElementById("btn-generate").addEventListener("click", onGenerate);
-  onGenerate(); // 初期描画
+  onGenerate();
 });
