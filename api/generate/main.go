@@ -32,7 +32,7 @@ type GenerateResponse struct {
 }
 
 // バランス調整用
-const targetRungsPerPair = 4.0 // 各ペアの目標本数
+const targetRungsPerPair = 3.0 // 各ペアの目標本数
 const minAutoDensity = 0.05
 const maxAutoDensity = 0.60
 const minRungsPerPair = 2 // 各ペアの最低本数保証
